@@ -26,10 +26,17 @@ export default function App() {
 
   if (init) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-bg">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+      <div className="h-screen w-screen flex items-center justify-center bg-bg relative overflow-hidden">
+        <div className="app-backdrop" />
+        <div className="flex flex-col items-center gap-4 animate-fade-in">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-extrabold shadow-bubble animate-pulse"
+            style={{ backgroundImage: 'linear-gradient(135deg, rgb(var(--brand)), rgb(var(--brand-hover)) 60%, #3ddc97)' }}
+          >
+            P
+          </div>
           <div className="text-sm font-medium text-ink-dim tracking-wide">Pulse Messenger</div>
+          <div className="w-8 h-8 border-[3px] border-brand/70 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     );

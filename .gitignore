@@ -5,3 +5,4 @@ dist/
 id_ed25519
 client/dist
 server/dist
+NUL

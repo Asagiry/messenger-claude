@@ -4,6 +4,13 @@ import { useStore } from '../store';
 
 type Mode = 'login' | 'register';
 
+const FEATURES = [
+  { icon: '⚡', title: 'Real-time messaging', desc: 'Instant delivery via WebSockets' },
+  { icon: '🔒', title: 'Private & secure', desc: 'Your conversations stay yours' },
+  { icon: '✨', title: 'Beautiful by default', desc: 'Light & dark themes, smooth animations' },
+  { icon: '👀', title: 'See what matters', desc: 'Read receipts, typing & online status' },
+];
+
 export default function Auth() {
   const [mode, setMode] = useState<Mode>('login');
   const [login, setLogin] = useState('');
@@ -13,6 +20,8 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const setMe = useStore((s) => s.setMe);
+  const theme = useStore((s) => s.theme);
+  const toggleTheme = useStore((s) => s.toggleTheme);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,81 +43,189 @@ export default function Auth() {
     }
   }
 
+  function fillDemo() {
+    setMode('login');
+    setLogin('alice');
+    setPassword('alice');
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="card w-full max-w-md p-8">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand/20 mb-3">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c5cff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
+    <div className="min-h-screen flex relative overflow-hidden">
+      <div className="app-backdrop" />
+
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        title="Toggle theme"
+        className="absolute top-5 right-5 z-10 p-2.5 rounded-full bg-bg-card border border-bg-line text-ink-dim hover:text-ink hover:scale-110 transition-all shadow-soft"
+      >
+        {theme === 'dark' ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        )}
+      </button>
+
+      {/* Hero */}
+      <div className="hidden lg:flex flex-col justify-center flex-1 px-16 xl:px-24 relative">
+        <div className="max-w-lg animate-slide-up">
+          <div className="inline-flex items-center gap-2 mb-6">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-extrabold shadow-bubble"
+                 style={{ backgroundImage: 'linear-gradient(135deg, rgb(var(--brand)), rgb(var(--brand-hover)))' }}>
+              P
+            </div>
+            <span className="text-xl font-extrabold tracking-tight">Pulse</span>
           </div>
-          <h1 className="text-2xl font-bold">Welcome to Pulse</h1>
-          <p className="text-ink-dim text-sm mt-1">
-            {mode === 'login' ? 'Sign in to continue chatting' : 'Create an account to get started'}
+          <h1 className="text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.05]">
+            Stay in sync.<br/>
+            <span className="bg-clip-text text-transparent" style={{
+              backgroundImage: 'linear-gradient(135deg, rgb(var(--brand)), rgb(var(--brand-hover)) 60%, #3ddc97)'
+            }}>
+              Talk in real-time.
+            </span>
+          </h1>
+          <p className="mt-6 text-lg text-ink-dim leading-relaxed">
+            A minimal, modern messenger built for focused conversations.
+            No noise. No distractions. Just you and your people.
           </p>
-        </div>
 
-        <form onSubmit={submit} className="space-y-3">
-          {mode === 'login' ? (
-            <input
-              className="input"
-              placeholder="Email or nickname"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
-              required
-            />
-          ) : (
-            <>
+          <div className="mt-10 grid grid-cols-2 gap-4">
+            {FEATURES.map((f, i) => (
+              <div
+                key={f.title}
+                className="p-4 rounded-2xl bg-bg-card/60 border border-bg-line backdrop-blur-sm hover:border-brand/40 transition-colors animate-slide-up"
+                style={{ animationDelay: `${100 + i * 60}ms`, animationFillMode: 'backwards' }}
+              >
+                <div className="text-2xl mb-1.5">{f.icon}</div>
+                <div className="font-semibold text-sm">{f.title}</div>
+                <div className="text-xs text-ink-dim mt-0.5">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Auth panel */}
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-8 relative">
+        <div className="card w-full max-w-md p-8 animate-scale-in relative">
+          <div className="lg:hidden text-center mb-6">
+            <div className="inline-flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold shadow-bubble"
+                   style={{ backgroundImage: 'linear-gradient(135deg, rgb(var(--brand)), rgb(var(--brand-hover)))' }}>
+                P
+              </div>
+              <span className="text-lg font-extrabold tracking-tight">Pulse</span>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold tracking-tight">
+            {mode === 'login' ? 'Welcome back' : 'Create your account'}
+          </h2>
+          <p className="text-ink-dim text-sm mt-1.5">
+            {mode === 'login' ? 'Sign in to continue your conversations.' : 'Join in seconds — no email confirmation needed.'}
+          </p>
+
+          {/* Tabs */}
+          <div className="mt-6 inline-flex p-1 rounded-xl bg-bg-line/50 w-full">
+            {(['login', 'register'] as Mode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => { setMode(m); setErr(''); }}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                  mode === m ? 'bg-bg-card text-ink shadow-soft' : 'text-ink-dim hover:text-ink'
+                }`}
+              >
+                {m === 'login' ? 'Sign in' : 'Register'}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={submit} className="space-y-3 mt-5">
+            {mode === 'login' ? (
+              <Field label="Email or nickname">
+                <input
+                  className="input"
+                  placeholder="alice"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </Field>
+            ) : (
+              <>
+                <Field label="Email">
+                  <input
+                    className="input"
+                    placeholder="you@example.com"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </Field>
+                <Field label="Nickname">
+                  <input
+                    className="input"
+                    placeholder="3-20 chars, a-z 0-9 _"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    required
+                  />
+                </Field>
+              </>
+            )}
+            <Field label="Password">
               <input
                 className="input"
-                placeholder="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <input
-                className="input"
-                placeholder="Nickname (3-20 chars, a-z 0-9 _)"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                required
-              />
-            </>
-          )}
-          <input
-            className="input"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+            </Field>
 
-          {err && <div className="text-danger text-sm">{err}</div>}
+            {err && (
+              <div className="text-danger text-sm bg-danger/10 border border-danger/20 rounded-lg px-3 py-2 animate-slide-up">
+                {err}
+              </div>
+            )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
-          </button>
-        </form>
+            <button type="submit" disabled={loading} className="btn-primary w-full !py-2.5 text-base">
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
+                  Please wait…
+                </span>
+              ) : mode === 'login' ? 'Sign in' : 'Create account'}
+            </button>
+          </form>
 
-        <div className="text-center mt-5 text-sm text-ink-dim">
-          {mode === 'login' ? (
-            <>No account?{' '}
-              <button onClick={() => { setMode('register'); setErr(''); }} className="text-brand hover:underline">Register</button>
-            </>
-          ) : (
-            <>Already have one?{' '}
-              <button onClick={() => { setMode('login'); setErr(''); }} className="text-brand hover:underline">Sign in</button>
-            </>
-          )}
-        </div>
-
-        <div className="mt-6 pt-5 border-t border-bg-line text-xs text-ink-mute text-center">
-          Demo accounts: <code className="text-ink-dim">alice / alice</code>, <code className="text-ink-dim">bob / bob</code>, etc.
+          <div className="mt-6 pt-5 border-t border-bg-line text-xs text-ink-mute text-center">
+            Demo accounts:{' '}
+            <button
+              type="button"
+              onClick={fillDemo}
+              className="text-brand hover:underline font-medium"
+            >
+              try as alice
+            </button>
+            {' '}— other seeded users: bob, carol, dave, eve…
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-xs font-semibold text-ink-dim mb-1.5 tracking-wide uppercase">{label}</span>
+      {children}
+    </label>
   );
 }
