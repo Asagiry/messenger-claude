@@ -299,6 +299,32 @@ export default function Chat() {
     } catch {}
   }
 
+  async function exportChat() {
+    if (!activePeer) return;
+    try {
+      const resp = await api<{ data: string }>(`/dialogs/${activePeer.id}/export`);
+      window.prompt("Copy this base64 chat dump to share or backup:", resp.data);
+    } catch (e: any) {
+      alert("Export failed: " + e.message);
+    }
+  }
+
+  async function importChat() {
+    if (!activePeer) return;
+    const data = window.prompt("Paste your base64 chat dump here to import messages:");
+    if (!data) return;
+    try {
+      const resp = await api<{ success: boolean; count: number }>(`/dialogs/${activePeer.id}/import`, {
+        method: 'POST',
+        body: JSON.stringify({ data })
+      });
+      alert(`Imported ${resp.count} messages successfully!`);
+      openChat(activePeer);
+    } catch (e: any) {
+      alert("Import failed: " + e.message);
+    }
+  }
+
   async function logout() {
     clearToken();
     wsClient.disconnect();
@@ -488,6 +514,20 @@ export default function Chat() {
                 </div>
               </button>
               <div className="flex-1" />
+              <button
+                onClick={exportChat}
+                title="Export Chat"
+                className="w-9 h-9 rounded-lg text-ink-dim hover:text-ink hover:bg-bg-line/60 transition-all flex items-center justify-center text-base"
+              >
+                📤
+              </button>
+              <button
+                onClick={importChat}
+                title="Import Chat"
+                className="w-9 h-9 rounded-lg text-ink-dim hover:text-ink hover:bg-bg-line/60 transition-all flex items-center justify-center text-base"
+              >
+                📥
+              </button>
               <button
                 onClick={() => setShowPeerProfile(true)}
                 title="View profile"
