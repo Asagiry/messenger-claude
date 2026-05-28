@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS users_nickname_idx ON users (lower(nickname));
 
 CREATE TABLE IF NOT EXISTS messages (
