@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db/pool';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { writeLog } from '../utils/logger';
 
 const router = Router();
 router.use(authMiddleware);
@@ -65,7 +66,6 @@ router.get('/:peerId/messages', async (req: AuthRequest, res) => {
     LIMIT $${params.length}
   `;
   const r = await pool.query(sql, params);
-  // Return ascending order
   res.json(r.rows.reverse());
 });
 
@@ -81,6 +81,75 @@ router.post('/:peerId/read', async (req: AuthRequest, res) => {
     [me, peer]
   );
   res.json({ updated: r.rows.map((x) => x.id) });
+});
+
+// Export chat history as base64 JSON string
+router.get('/:peerId/export', async (req: AuthRequest, res) => {
+  const me = req.userId!;
+  const peer = parseInt(String(req.params.peerId), 10);
+  if (isNaN(peer)) return res.status(400).json({ error: 'Bad id' });
+
+  try {
+    const r = await pool.query(
+      `SELECT sender_id, receiver_id, content, status, created_at 
+       FROM messages 
+       WHERE deleted_for_both = FALSE 
+         AND ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1))
+         AND NOT (sender_id = $1 AND deleted_for_sender = TRUE)
+       ORDER BY id ASC`,
+      [me, peer]
+    );
+
+    const jsonStr = JSON.stringify(r.rows);
+    const base64Data = Buffer.from(jsonStr).toString('base64');
+    writeLog('chat_export', `userId=${me}, peerId=${peer}, messageCount=${r.rowCount}`);
+    res.json({ data: base64Data });
+  } catch (e) {
+    console.error(e);
+    writeLog('chat_export_error', `Server error exporting chat: userId=${me}, peerId=${peer}`);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Import chat history from base64 JSON string
+router.post('/:peerId/import', async (req: AuthRequest, res) => {
+  const me = req.userId!;
+  const peer = parseInt(String(req.params.peerId), 10);
+  if (isNaN(peer)) return res.status(400).json({ error: 'Bad id' });
+
+  const { data } = req.body || {};
+  if (!data) return res.status(400).json({ error: 'Missing data' });
+
+  try {
+    const jsonStr = Buffer.from(data, 'base64').toString('utf-8');
+    const messages = JSON.parse(jsonStr);
+
+    if (!Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Invalid format' });
+    }
+
+    // Insert messages without strict schema/authorization check, representing the deserialization flaw
+    for (const msg of messages) {
+      await pool.query(
+        `INSERT INTO messages (sender_id, receiver_id, content, status, created_at)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          msg.sender_id || me,
+          msg.receiver_id || peer,
+          msg.content || '',
+          msg.status || 'sent',
+          msg.created_at || new Date()
+        ]
+      );
+    }
+
+    writeLog('chat_import', `userId=${me}, peerId=${peer}, messageCount=${messages.length}`);
+    res.json({ success: true, count: messages.length });
+  } catch (e: any) {
+    console.error(e);
+    writeLog('chat_import_error', `Server error importing chat: userId=${me}, peerId=${peer}, error=${e.message}`);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 export default router;
