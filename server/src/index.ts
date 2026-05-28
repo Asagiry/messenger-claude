@@ -22,6 +22,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/dialogs', dialogRoutes);
 app.use('/api/presence', presenceRoutes);
 
+// Expose local uploads folder for downloaded avatars
+app.use('/uploads', express.static(path.resolve(__dirname, '../../uploads')));
+
 // Serve frontend static
 const clientDist = path.resolve(__dirname, '../../client/dist');
 app.use(express.static(clientDist));
